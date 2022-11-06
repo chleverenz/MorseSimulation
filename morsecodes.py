@@ -1,3 +1,7 @@
+# how are the characters in the codetable are made of?
+DITSYM = "."
+DAHSYM = "-"
+# a list of recognized morsecodes, do not use spaces in morsecodes, only DITSYM and DAHSYM as defined
 CODES = {
     "a" : ".-"
     , "b" : "-..."
@@ -37,6 +41,7 @@ CODES = {
     , "9" : "----."
     , "." : ".-.-.-"
     , "," : "--..--"
+    , "?" : "..--.."
     , ":" : "---..."
     , ";" : "-.-.-."
     , "/" : "-..-."
@@ -44,26 +49,66 @@ CODES = {
     , "ar" : ".-.-."
     , "sk" : "...-.-"
     , "hh" : "........"
+    , "\b" : "........"
 }
-DITSYM = "."
-DAHSYM = "-"
-DITOUT = "D"
-DAHOUT = "L"
-DOTSPACE = "DS"
-CHARSPACE = "CS"
-WORDSPACE = "WS"
+# the constants which are used pro producing outputs
+EMPTYSTRING = ""
+#how should charactes go to a special textfile (one character only for the ease of use and all should be diffrent of course)
+DITOUT = "D" # short
+DAHOUT = "L" # long
+DOTSPACE = "S" # space between shorts and longs
+CHARSPACE = "C" # character boundary
+WORDSPACE = "W" # word boundary
+NEWLINESPACE = "N" # newline boundary
+# how many spaces should go for the actula morsecode?
+CHARSPACES = " "
+WORDSPACES = "  "
+NEWLINESPACES = "   "
+# special codes which are handled in a special way like space, newline, carriage returns tabs and so on
+SPECIALCODES = {
+    "\n" : (NEWLINESPACES, NEWLINESPACE)
+    , "\r" : (NEWLINESPACES, NEWLINESPACE)
+    , "\f" : (NEWLINESPACES, NEWLINESPACE)
+    , "\t" : (WORDSPACES, WORDSPACE)
+    , " " : (WORDSPACES, WORDSPACE)
+}
+# which charaters already produce a pause?
+SPACEPRODUCERS = [
+    NEWLINESPACE
+    , WORDSPACE
+    , CHARSPACE
+    , "\b"
+]
 
-def getsinglemorse(str = ""):
-    if str != "" and str.lower() in CODES:
-        return CODES[str.lower()]
+# get code for a single character, returns a tuple with the code, the shortcode for file and the parsed character
+def getsinglemorse(str = EMPTYSTRING):
+    retval = (EMPTYSTRING,EMPTYSTRING)
+    if str in SPECIALCODES:
+        retval = SPECIALCODES[str]
     else:
-        return ""
+        if str != EMPTYSTRING and str.lower() in CODES:
+            themorse = CODES[str.lower()];
+            thetoken = EMPTYSTRING
+            morselen = len(themorse)
+            for i in range(morselen):
+                if(themorse[i] == DITSYM):
+                    thetoken += DITOUT
+                else:
+                    thetoken += DAHOUT
+                if i < morselen - 1:
+                    thetoken += DOTSPACE
+            retval = (themorse,thetoken)
+        else:
+            retval = (EMPTYSTRING,EMPTYSTRING)
+    return (retval[0], retval[1],str.lower())
 
-def getmorse(str = ""):
-    retval = ""
-    if str != "":
+#get the morsecode for a string for convinience, does not handle multicharatercodes... :-)
+def getmorse(str = EMPTYSTRING):
+    retval = []
+    if str != EMPTYSTRING:
         for  i in range(len(str)):
-            retval += getsinglemorse(str[i]) + " "
+            thecode = getsinglemorse(str[i])
+            retval += (thecode,)
     return retval
 
 def main():
