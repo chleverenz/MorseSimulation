@@ -134,3 +134,4 @@ dmypy.json
 *.plain
 *.morse
 *.token
+*.timing

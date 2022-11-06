@@ -39,6 +39,7 @@ def dumpmorse(thetext = "", toConsole = True, tokenFile = None, morseFile = None
     morsetext = mc.getmorse(thetext) 
     outfiles = [morseFile, tokenFile, plainFile]
     morselen = len(morsetext)
+    deli = (mc.CHARSPACES,mc.CHARSPACE, mc.EMPTYSTRING)
     for i in range(morselen):
         if toConsole:
             print(morsetext[i],)
@@ -47,7 +48,6 @@ def dumpmorse(thetext = "", toConsole = True, tokenFile = None, morseFile = None
                 outfiles[f].write(morsetext[i][f])
         # if this or next character already produces a pause, no characterpause :-)
         if i < morselen - 1 and morsetext[i + 1][1] not in mc.SPACEPRODUCERS and morsetext[i][1] not in mc.SPACEPRODUCERS:
-            deli = (mc.CHARSPACES,mc.CHARSPACE, mc.EMPTYSTRING)
             if toConsole:
                 print(deli)
             for f in range(len(outfiles)):
@@ -57,7 +57,6 @@ def dumpmorse(thetext = "", toConsole = True, tokenFile = None, morseFile = None
 def main():
     args = sys.argv[1:]
     arglen = len(args)
-    i = 0
     helpalreadygiven = False
     text = EMPTYSTRING
     outputfilebase = DEFAULTOUTFILEBASE
@@ -65,6 +64,7 @@ def main():
     toTokenfile = False
     toPlainfile = False
     toMorsefile = False
+    i = 0
     while i < arglen:
         cmd = args[i].lower()
         i += 1
@@ -124,6 +124,10 @@ def main():
         morseFile = None
         plainFile = None
         createmode = "wt"
+        adot = "."
+        outputparts = outputfilebase.split(adot)
+        if len(outputparts) > 1:
+            outputfilebase = adot.join(outputparts[:-1])
         if toTokenfile:
             tokenFile = open(outputfilebase + TOKENFILEEXTENSION,createmode)
         if toPlainfile:
