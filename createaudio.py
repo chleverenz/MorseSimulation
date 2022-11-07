@@ -16,7 +16,7 @@ audio = []
 #sample_rate = 44100.0
 sample_rate = 8000.0
 
-def append_silence(duration_milliseconds=500, noisefraction = 0.1):
+def append_silence(duration_milliseconds=500, noisefraction = 0.1, volume = 1.0):
     """
     Adding silence is easy - we add zeros to the end of our array
     """
@@ -26,7 +26,7 @@ def append_silence(duration_milliseconds=500, noisefraction = 0.1):
     for x in range(int(num_samples)): 
         val = 0
         if(noisefraction > 0.0):
-            val = random.random() * noisefraction
+            val = random.random() * noisefraction * volume
         audio.append(val)
     return
 
@@ -50,8 +50,8 @@ def append_sinewave(
 
     for x in range(int(num_samples)):
         val = volume * math.sin(2 * math.pi * freq * ( x / sample_rate ))
-        if noisefraction > 1.0:
-            val = (val * (1.0 - noisefraction)) + (random.random() * noisefraction);
+        if noisefraction > 0.0:
+            val = (val * (1.0 - noisefraction)) + (random.random() * noisefraction * volume);
         audio.append(val)
     return
 
@@ -166,7 +166,7 @@ def main():
                 if t > 0:
                     append_sinewave(volume=volume, duration_milliseconds= t, freq=frequency, noisefraction=signalnoise)
                 else:
-                    append_silence(duration_milliseconds= abs(t), noisefraction=silencenoise)
+                    append_silence(duration_milliseconds= abs(t), noisefraction=silencenoise, volume = volume)
             adot = "."
             outputparts = outputfilebase.split(adot)
             if len(outputparts) > 1:

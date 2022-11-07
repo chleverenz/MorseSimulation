@@ -135,3 +135,4 @@ dmypy.json
 *.morse
 *.token
 *.timing
+.ionide
