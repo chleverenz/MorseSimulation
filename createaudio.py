@@ -92,14 +92,39 @@ SIGNALNOISECOMMANDLINE = ["--signalnoise","-sign"]
 FREQUENCYCOMMANDLINE = ["--frequency","-freq","-p"]
 VOLUMECOMMANDLINE = ["--volume","-vol","-v"]
 DEFAULTOUTFILEBASE = "example"
+HELPCOMMANDLINE = ["--help","-h","-?"]
+
+DEFAULTSILENCENOISE = 0.0
+DEFAULTFREQENCY = 440
+DEFAULTVOLUME = 0.25
+
+HELPDELIMITER = " or "
+HELPINDENTION = "  "
+
+def givehelp():
+    print("Creates a morse audiofile from a timingfile")
+    print("Usage: " + sys.argv[0] + " with parameters:")
+    print(HELPINDENTION + HELPDELIMITER.join(FILECOMMANDLINE) + " <filename> : filenmane to read timing from")
+    print(HELPINDENTION + HELPDELIMITER.join(OUTFILECOMMANDLINE) + ": basename for outputfiles (default: " + DEFAULTOUTFILEBASE +")")
+    print(HELPINDENTION + HELPDELIMITER.join(SILENCENOISECOMMANDLINE) + ": noisefraction in silence (default: " + str(DEFAULTSILENCENOISE) +")")
+    print(HELPINDENTION + HELPDELIMITER.join(SIGNALNOISECOMMANDLINE) + ": noisefraction in signal (default: " + str(DEFAULTSILENCENOISE) +")")
+    print(HELPINDENTION + HELPDELIMITER.join(FREQUENCYCOMMANDLINE) + ": freqency for signal (default: " + str(DEFAULTFREQENCY) +")")
+    print(HELPINDENTION + HELPDELIMITER.join(VOLUMECOMMANDLINE) + ": outputvolume (default: " + str(DEFAULTVOLUME) +")")
+    print(HELPINDENTION + HELPDELIMITER.join(HELPCOMMANDLINE) + ": this text :-)")
 
 def main():
     args = sys.argv[1:]
     arglen = len(args)
+    
+    helpalreadygiven = False
 
-    volume = 0.25
-    frequency = 440.0
-    silencenoise = 0.0
+    if arglen == 0:
+        givehelp()
+        helpalreadygiven = True
+
+    volume = DEFAULTVOLUME
+    frequency = DEFAULTFREQENCY
+    silencenoise = DEFAULTSILENCENOISE
     signalnoise = silencenoise
     infilename = "example.timing"
     outputfilebase = DEFAULTOUTFILEBASE
@@ -151,11 +176,25 @@ def main():
                 if volume > 1.0:
                     volume = 1.0
             else:
-                print("Error: no argument for frequency given")
+                print("Error: no argument for volume given")
+        elif cmd in HELPCOMMANDLINE:
+            if not helpalreadygiven:
+                givehelp()
+                helpalreadygiven = True
         else:
-            print("command " + cmd + " not known")
+            print("unknown parameter " + cmd)
+            if not helpalreadygiven:
+                givehelp()
+                helpalreadygiven = True
 
     if exists(infilename):
+        adot = "."
+        outputparts = outputfilebase.split(adot)
+        if len(outputparts) > 1:
+            outputfilebase = adot.join(outputparts[:-1])
+        outputfile = outputfilebase + ".wav"
+        print("converting file " + infilename + " to " + outputfile)
+
         infile = open(infilename,"r")
         lines = infile.readlines()
         infile.close()
@@ -167,11 +206,7 @@ def main():
                     append_sinewave(volume=volume, duration_milliseconds= t, freq=frequency, noisefraction=signalnoise)
                 else:
                     append_silence(duration_milliseconds= abs(t), noisefraction=silencenoise, volume = volume)
-            adot = "."
-            outputparts = outputfilebase.split(adot)
-            if len(outputparts) > 1:
-                outputfilebase = adot.join(outputparts[:-1])
-            save_wav(outputfilebase + ".wav")
+            save_wav(outputfile)
     else:
         print("file " + infilename + " not found")
 

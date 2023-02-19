@@ -36,11 +36,16 @@ def main():
     text = ""
     outputfilebase = DEFAULTOUTFILEBASE
     helpalreadygiven = False
+    if arglen == 0:
+        givehelp()
+        helpalreadygiven = True
+
     timing = {}
     for i in range(len(TIMINGS)):
         entry = TIMINGS[i]
         timing[entry[0]] = entry[1]
     i = 0
+
     while i < arglen:
         cmd = args[i].lower()
         i += 1
