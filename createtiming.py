@@ -15,7 +15,7 @@ TIMINGS = [
 ]
 
 EXTENSION = ".timing"
-DEFAULTOUTFILEBASE = "outputwav"
+DEFAULTOUTFILEBASE = "exampleoutput"
 FILECOMMANDLINE = ["--file","-f"]
 HELPCOMMANDLINE = ["--help","-h","-?"]
 OUTFILECOMMANDLINE = ["--outbase","-o"]
