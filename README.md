@@ -34,7 +34,8 @@ As there are different things to do, currently there are three tools:
     ```
 
 - createaudio.py  creates an audio from a timingfile. It will create a wavfile with the provided timing which is
-    interpreted as/in milliseconds. You can set the frequency, the noise and the volume for example. This wavfile could be the input to the final reconstruction. As text and timing is available, the quality could be tested :-)
+    interpreted as/in milliseconds. You can set the frequency, the noise and the volume for example. This wavfile could be the input to the final reconstruction. As text and timing is available, the quality could be tested :-) Also, an adc file is created which shows the plain values which are used for the wavfiles.
+    As there is also an option to create a wavfile from an adc file one could "filter" the adc file to another adc file and make it hearable.
 
     ```bash
     python3 createaudio.py -f example.timing

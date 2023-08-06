@@ -51,12 +51,12 @@ def append_sinewave(
     for x in range(int(num_samples)):
         val = volume * math.sin(2 * math.pi * freq * ( x / sample_rate ))
         if noisefraction > 0.0:
-            val = (val * (1.0 - noisefraction)) + (random.random() * noisefraction * volume);
+            val = (val * (1.0 - noisefraction)) + ((random.random() - 0.5) * noisefraction * volume);
         audio.append(val)
     return
 
 
-def save_wav(file_name):
+def save_wav(file_name, alreadyconverted = False):
     # Open up a wav file
     wav_file=wave.open(file_name,"w")
 
@@ -79,13 +79,28 @@ def save_wav(file_name):
     # use the floating point -1.0 to 1.0 data directly in a WAV file but not
     # obvious how to do that using the wave module in python.
     for sample in audio:
-        wav_file.writeframes(struct.pack('h', int( sample * 32767.0 )))
+        if alreadyconverted:
+            wav_file.writeframes(struct.pack('h', int( sample )))
+        else:
+            wav_file.writeframes(struct.pack('h', int( sample * 32767.0 )))
 
     wav_file.close()
 
     return
 
+def save_adc(file_name):
+    # Open up a wav file
+    adc_file= open(file_name,"w")
+
+    for sample in audio:
+        adc_file.write(str(int(sample * 32767.0)) + "\n")
+
+    adc_file.close()
+
+    return
+
 OUTFILECOMMANDLINE = ["--outbase","-o"]
+CREATEWAVFROMADCCOMMANDLINE = ["--adc2wav","-a2w"]
 FILECOMMANDLINE = ["--file","-f"]
 SILENCENOISECOMMANDLINE = ["--silentnoise","-siln"]
 SIGNALNOISECOMMANDLINE = ["--signalnoise","-sign"]
@@ -104,12 +119,13 @@ HELPINDENTION = "  "
 def givehelp():
     print("Creates a morse audiofile from a timingfile")
     print("Usage: " + sys.argv[0] + " with parameters:")
-    print(HELPINDENTION + HELPDELIMITER.join(FILECOMMANDLINE) + " <filename> : filenmane to read timing from")
+    print(HELPINDENTION + HELPDELIMITER.join(FILECOMMANDLINE) + " <filename> : filename to read timing/adcvalues from")
     print(HELPINDENTION + HELPDELIMITER.join(OUTFILECOMMANDLINE) + ": basename for outputfiles (default: " + DEFAULTOUTFILEBASE +")")
     print(HELPINDENTION + HELPDELIMITER.join(SILENCENOISECOMMANDLINE) + ": noisefraction in silence (default: " + str(DEFAULTSILENCENOISE) +")")
     print(HELPINDENTION + HELPDELIMITER.join(SIGNALNOISECOMMANDLINE) + ": noisefraction in signal (default: " + str(DEFAULTSILENCENOISE) +")")
     print(HELPINDENTION + HELPDELIMITER.join(FREQUENCYCOMMANDLINE) + ": freqency for signal (default: " + str(DEFAULTFREQENCY) +")")
     print(HELPINDENTION + HELPDELIMITER.join(VOLUMECOMMANDLINE) + ": outputvolume (default: " + str(DEFAULTVOLUME) +")")
+    print(HELPINDENTION + HELPDELIMITER.join(CREATEWAVFROMADCCOMMANDLINE) + ": just create wav from adc file")
     print(HELPINDENTION + HELPDELIMITER.join(HELPCOMMANDLINE) + ": this text :-)")
 
 def main():
@@ -117,6 +133,7 @@ def main():
     arglen = len(args)
     
     helpalreadygiven = False
+    filenameapplied = False
 
     if arglen == 0:
         givehelp()
@@ -126,8 +143,10 @@ def main():
     frequency = DEFAULTFREQENCY
     silencenoise = DEFAULTSILENCENOISE
     signalnoise = silencenoise
-    infilename = "example.timing"
+    #infilename = "example.timing"
+    infilename = ""
     outputfilebase = DEFAULTOUTFILEBASE
+    adc2wav = False
 
     i = 0
     while i < arglen:
@@ -141,6 +160,7 @@ def main():
                 print("Error: no argument for outfilebase given")
         elif cmd in FILECOMMANDLINE:
             if arglen > i:
+                filenameapplied = True
                 infilename = args[i]
                 i = i + 1
                 if outputfilebase == DEFAULTOUTFILEBASE:
@@ -177,6 +197,8 @@ def main():
                     volume = 1.0
             else:
                 print("Error: no argument for volume given")
+        elif cmd in CREATEWAVFROMADCCOMMANDLINE:
+            adc2wav = True
         elif cmd in HELPCOMMANDLINE:
             if not helpalreadygiven:
                 givehelp()
@@ -186,29 +208,45 @@ def main():
             if not helpalreadygiven:
                 givehelp()
                 helpalreadygiven = True
+    
+    filenameapplied = infilename != ""
 
-    if exists(infilename):
+    if exists(infilename) and filenameapplied:
         adot = "."
         outputparts = outputfilebase.split(adot)
         if len(outputparts) > 1:
             outputfilebase = adot.join(outputparts[:-1])
         outputfile = outputfilebase + ".wav"
-        print("converting file " + infilename + " to " + outputfile)
+        outputfileadc = outputfilebase + ".adc"
+        if adc2wav:
+            print(f"converting file {infilename} to {outputfile}")
+            global audio
+            infile = open(infilename,"r")
+            audio = infile.readlines()
+            infile.close()
+            save_wav(outputfile, alreadyconverted=True)
+        else:
+            print(f"converting file {infilename} to {outputfile} and {outputfileadc}")
+            #print("converting file " + infilename + " to " + outputfile)
 
-        infile = open(infilename,"r")
-        lines = infile.readlines()
-        infile.close()
-        linecout = len(lines)
-        if linecout > 0:
-            for i in range(linecout):
-                t = int(lines[i])
-                if t > 0:
-                    append_sinewave(volume=volume, duration_milliseconds= t, freq=frequency, noisefraction=signalnoise)
-                else:
-                    append_silence(duration_milliseconds= abs(t), noisefraction=silencenoise, volume = volume)
-            save_wav(outputfile)
+            infile = open(infilename,"r")
+            lines = infile.readlines()
+            infile.close()
+            linecout = len(lines)
+            if linecout > 0:
+                for i in range(linecout):
+                    t = int(lines[i])
+                    if t > 0:
+                        append_sinewave(volume=volume, duration_milliseconds= t, freq=frequency, noisefraction=signalnoise)
+                    else:
+                        append_silence(duration_milliseconds= abs(t), noisefraction=silencenoise, volume = volume)
+                save_wav(outputfile)
+                save_adc(outputfileadc)
     else:
-        print("file " + infilename + " not found")
+        if filenameapplied:
+            print(f"file {infilename} not found")
+        else:
+            print(f"no inputfile given")
 
 if __name__ == "__main__":
     main()

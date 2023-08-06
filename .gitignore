@@ -136,3 +136,9 @@ dmypy.json
 *.token
 *.timing
 .ionide
+*.morse
+*.plain
+*.adc
+*.timing
+*.token
+*.wav
