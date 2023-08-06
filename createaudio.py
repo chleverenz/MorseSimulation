@@ -80,7 +80,7 @@ def save_wav(file_name, alreadyconverted = False):
     # obvious how to do that using the wave module in python.
     for sample in audio:
         if alreadyconverted:
-            wav_file.writeframes(struct.pack('h', int( sample )))
+            wav_file.writeframes(struct.pack('h', sample))
         else:
             wav_file.writeframes(struct.pack('h', int( sample * 32767.0 )))
 
@@ -222,7 +222,7 @@ def main():
             print(f"converting file {infilename} to {outputfile}")
             global audio
             infile = open(infilename,"r")
-            audio = infile.readlines()
+            audio = list(map(lambda e: int(e),infile.readlines()))
             infile.close()
             save_wav(outputfile, alreadyconverted=True)
         else:
